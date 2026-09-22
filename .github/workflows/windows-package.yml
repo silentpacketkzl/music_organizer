@@ -41,10 +41,10 @@ jobs:
           pyinstaller --noconfirm --onefile --console --distpath pyinstaller-dist --name "burmese-music-cleaner-cli" main.py
 
       - name: Install Node.js dependencies & Build Web GUI
-        shell: cmd
+        shell: bash
         run: |
-          call npm install || call npm install --legacy-peer-deps
-          call npm run build
+          npm install
+          npm run build
 
       - name: Download Windows Audio Binaries (fpcalc & ffmpeg)
         shell: pwsh
@@ -105,7 +105,7 @@ jobs:
           Copy-Item -Path ".env.example" -Destination "package-windows\env.example.txt" -Force
 
           # Copy node_modules for local production runtime
-          npm prune --omit=dev --legacy-peer-deps
+          npm prune --omit=dev
           Copy-Item -Path "node_modules" -Destination "package-windows\node_modules" -Recurse -Force
 
           Write-Host "Windows package assembled successfully."
