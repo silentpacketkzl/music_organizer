@@ -50,7 +50,7 @@ jobs:
         run: |
           New-Item -ItemType Directory -Force -Path bin
 
-          # 1. Download fpcalc (Chromaprint)
+          # 1. Download Chromaprint fpcalc (small ~1.5MB zip)
           Write-Host "Downloading Chromaprint fpcalc..."
           $fpcalcUrl = "https://github.com/acoustid/chromaprint/releases/download/v1.5.1/chromaprint-fpcalc-1.5.1-windows-x86_64.zip"
           curl.exe -L -s -o fpcalc.zip $fpcalcUrl
@@ -58,13 +58,19 @@ jobs:
           Get-ChildItem -Path fpcalc_extracted -Recurse -Filter "fpcalc.exe" | Copy-Item -Destination "bin\fpcalc.exe" -Force
           Remove-Item -Recurse -Force fpcalc.zip, fpcalc_extracted
 
-          # 2. Download ffmpeg
-          Write-Host "Downloading FFmpeg..."
-          $ffmpegUrl = "https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-gpl.zip"
-          curl.exe -L -s -o ffmpeg.zip $ffmpegUrl
-          Expand-Archive -Path ffmpeg.zip -DestinationPath ffmpeg_extracted -Force
-          Get-ChildItem -Path ffmpeg_extracted -Recurse -Filter "ffmpeg.exe" | Copy-Item -Destination "bin\ffmpeg.exe" -Force
-          Remove-Item -Recurse -Force ffmpeg.zip, ffmpeg_extracted
+          # 2. Get FFmpeg (use runner's pre-installed ffmpeg if available, otherwise download)
+          $ffmpegCmd = Get-Command ffmpeg.exe -ErrorAction SilentlyContinue
+          if ($ffmpegCmd -and (Test-Path $ffmpegCmd.Source)) {
+            Write-Host "Using pre-installed FFmpeg from: $($ffmpegCmd.Source)"
+            Copy-Item -Path $ffmpegCmd.Source -Destination "bin\ffmpeg.exe" -Force
+          } else {
+            Write-Host "Downloading FFmpeg..."
+            $ffmpegUrl = "https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-gpl.zip"
+            curl.exe -L -s -o ffmpeg.zip $ffmpegUrl
+            Expand-Archive -Path ffmpeg.zip -DestinationPath ffmpeg_extracted -Force
+            Get-ChildItem -Path ffmpeg_extracted -Recurse -Filter "ffmpeg.exe" | Copy-Item -Destination "bin\ffmpeg.exe" -Force
+            Remove-Item -Recurse -Force ffmpeg.zip, ffmpeg_extracted
+          }
 
           # 3. Copy built CLI to bin
           Copy-Item -Path "pyinstaller-dist\burmese-music-cleaner-cli.exe" -Destination "bin\burmese-music-cleaner-cli.exe" -Force
@@ -100,14 +106,30 @@ jobs:
       - name: Compile Inno Setup Windows Installer (.exe)
         shell: pwsh
         run: |
-          # Check for Inno Setup compiler
-          $isccPath = "C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
-          if (-not (Test-Path $isccPath)) {
-            Write-Host "Inno Setup not found in default path, installing via Chocolatey..."
-            choco install innosetup --no-progress -y
-          }
           New-Item -ItemType Directory -Force -Path dist-installer
-          & $isccPath windows\installer.iss
+
+          $isccCandidates = @(
+            "C:\Program Files (x86)\Inno Setup 6\ISCC.exe",
+            "C:\Program Files\Inno Setup 6\ISCC.exe"
+          )
+          $isccPath = $isccCandidates | Where-Object { Test-Path $_ } | Select-Object -First 1
+
+          if (-not $isccPath) {
+            Write-Host "Inno Setup not found in standard paths. Installing via Chocolatey..."
+            choco install innosetup --no-progress -y
+            $isccPath = $isccCandidates | Where-Object { Test-Path $_ } | Select-Object -First 1
+            if (-not $isccPath) {
+              $cmd = Get-Command ISCC.exe -ErrorAction SilentlyContinue
+              if ($cmd) { $isccPath = $cmd.Source }
+            }
+          }
+
+          if ($isccPath -and (Test-Path $isccPath)) {
+            Write-Host "Compiling Windows Setup installer using $isccPath..."
+            & $isccPath windows\installer.iss
+          } else {
+            Write-Host "::warning::Inno Setup compiler not found; skipping .exe installer and packaging portable zip."
+          }
           Get-ChildItem -Path dist-installer
 
       - name: Create Portable Zip Package
