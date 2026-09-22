@@ -8,6 +8,26 @@ A tool designed to clean up messy local audio libraries:
 
 ---
 
+## 📦 Pre-Built Windows Package (GitHub Actions)
+
+You can build and download a ready-to-run Windows package directly using **GitHub Actions**:
+
+### What the Windows Package includes:
+- **`BurmeseMusicCleaner-Setup-x64.exe`**: Official Inno Setup installer that installs to `Program Files` and creates Desktop/Start Menu shortcuts.
+- **`BurmeseMusicCleaner-Windows-Portable-x64.zip`**: Zero-installation portable ZIP folder.
+- **Batteries-Included Binaries**: Automatically bundles `fpcalc.exe` (Chromaprint), `ffmpeg.exe`, and the standalone `burmese-music-cleaner-cli.exe`.
+- **One-Click Launcher**: Includes `Launch-WebGUI.bat` to launch the server and open your browser automatically.
+
+### How to trigger & download the Windows build:
+1. Push your code to your GitHub repository.
+2. In your repository on GitHub, go to the **"Actions"** tab.
+3. Select **"Build Windows Package & Installer"** on the left.
+4. Click **"Run workflow"** -> select branch `main` -> click green button.
+5. Once complete (takes ~2 minutes), download the **`Burmese-Music-Cleaner-Windows-x64`** artifact ZIP!
+6. *Optional for Releases*: Tagging a commit with `git tag v1.0.0 && git push origin v1.0.0` will automatically create a published GitHub Release with the installer and ZIP attached.
+
+---
+
 ## 🚀 Quick Start: Web GUI Installation
 
 To run the Web GUI locally on your computer:

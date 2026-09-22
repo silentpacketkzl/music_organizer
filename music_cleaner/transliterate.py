@@ -240,6 +240,9 @@ class TransliterationEngine:
             cleaned = t.strip()
             if not contains_burmese(cleaned):
                 results[t] = cleaned
+            elif cleaned in OFFLINE_PHONETIC_MAP:
+                results[t] = OFFLINE_PHONETIC_MAP[cleaned]
+                self.db.save_transliteration(cleaned, OFFLINE_PHONETIC_MAP[cleaned], detected_script="burmese", model_used="canonical-dict")
             else:
                 burmese_to_fetch.add(cleaned)
 
