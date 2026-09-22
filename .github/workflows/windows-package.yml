@@ -43,7 +43,7 @@ jobs:
       - name: Install Node.js dependencies & Build Web GUI
         shell: cmd
         run: |
-          call npm install --legacy-peer-deps
+          call npm install || call npm install --legacy-peer-deps
           call npm run build
 
       - name: Download Windows Audio Binaries (fpcalc & ffmpeg)
