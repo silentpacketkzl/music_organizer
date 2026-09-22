@@ -38,7 +38,7 @@ jobs:
 
       - name: Build Standalone Windows CLI Executable
         run: |
-          pyinstaller --noconfirm --onefile --windowed=false --distpath pyinstaller-dist --name "burmese-music-cleaner-cli" main.py
+          pyinstaller --noconfirm --onefile --console --distpath pyinstaller-dist --name "burmese-music-cleaner-cli" main.py
 
       - name: Install Node.js dependencies & Build Web GUI
         run: |
@@ -98,7 +98,7 @@ jobs:
           Copy-Item -Path ".env.example" -Destination "package-windows\env.example.txt" -Force
 
           # Copy node_modules for local production runtime
-          npm prune --production --legacy-peer-deps
+          npm prune --omit=dev --legacy-peer-deps
           Copy-Item -Path "node_modules" -Destination "package-windows\node_modules" -Recurse -Force
 
           Write-Host "Windows package assembled successfully."
